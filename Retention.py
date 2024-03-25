@@ -89,32 +89,6 @@ def RetentionBlock(args):
         return self.out_proj(out)
     return __init__(nn.Module(forward=forward), args)
 
-def RetentionArgs(name):
-    args = nn.Args(
-        vocab_dim = 32,
-        latent_dim = 384,
-        dropout = 0.1,
-        bias = False, # bias in Linear?
-    )
-    mlp_args = nn.Args(
-        name = 'MLP',
-        qk_dim = 64,
-        kv_size = 384 * 3,
-        kv_gate = False,
-    ),
-    attn_args = nn.Args(
-        name = 'Retention',
-        num_heads = 8,
-        num_kv_groups = 8,
-        rotary_embedding = True
-    ),
-    match name:
-        case 'Ret':
-            args.layers = [attn_args, mlp_args]*3
-        case _:
-            assert False, f"Unknown Ret name{name}"
-    return args
-
 def RetNet(name):
     import aka.repo as repo
 
