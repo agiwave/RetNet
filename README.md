@@ -1,6 +1,6 @@
 # RetNet
 
-A simple RetNet demo. This repo is just for learning and backup. I have no CUDA device yet. So, the code can only run on CPU for now.
+Maybe the simplest RetNet implementation. This repo is just for learning and backup. I have no CUDA device yet. So, the code can only run on CPU for now.
 
 The intresting thing is: MSR block implementation < 100 lines code. :)
 
