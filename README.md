@@ -2,6 +2,8 @@
 
 A simple RetNet demo. This repo is just for learning and backup. I have no CUDA device yet. So, the code can only run on CPU for now.
 
+The intresting thing is: MSR block implementation < 100 lines code. :)
+
 Please ignore all aka code here. It's a sample proxy to torch:
 
     aka.nn --> torch.nn
