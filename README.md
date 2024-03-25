@@ -28,3 +28,7 @@ to folder:
 ## Run
 
 python Retention.py
+
+## Understanding
+
+![alt text](Retention.png)
