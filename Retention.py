@@ -68,7 +68,7 @@ def RetentionBlock(args):
         q = apply_rotary_emb(q, cache, pos=k.size(2)-T)
         k = apply_rotary_emb(k, cache)
 
-        # -- qkv --
+        # -- qkv ( Q @ K * D ) @ V --
         decay_mask = compute_mask(self.decay, q.size(2), k.size(2), self.num_heads)
         y = np.einsum('bhld,bhmd,bhlm,bhmv->blhv', q, k, decay_mask, v)
 
