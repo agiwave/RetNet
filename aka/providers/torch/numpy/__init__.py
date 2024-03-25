@@ -34,6 +34,7 @@ def array(data, *args, **kwargs):
     return tensor(data, *args, **kwargs)
     
 repeat = repeat_interleave
+swish = silu
 def iden(inputs):
     return inputs
 

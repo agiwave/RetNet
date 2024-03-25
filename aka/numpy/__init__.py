@@ -74,7 +74,9 @@ def argsort(input, dim=-1, descending=False, stable=False): return boot.invoke()
 def argmax(input, dim=None, keepdim=False): return boot.invoke()
 def argmin(input, dim=None, keepdim=False): return boot.invoke()
 def argwhere(input): return boot.invoke()
+
 def gather(input, dim, index, *, sparse_grad=False): return boot.invoke()
+def select(input, dim, index): return boot.invoke()
 def index_select(input, dim, index): return boot.invoke()
 def masked_select(input, mask): return boot.invoke()
 def narrow(input, dim, start, length): return boot.invoke()
@@ -94,10 +96,12 @@ def embedding(input, weight, padding_idx=None, max_norm=None, norm_type=2.0, sca
 
 def relu(input): return boot.invoke()
 def silu(input): return boot.invoke()
+def swish(input): return boot.invoke()
 def gelu(input, approximate='none'): return boot.invoke()
 def softmax(input, dim=None): return boot.invoke()
 def softplus(input, beta=1, threshold=20): return boot.invoke()
 def sigmoid(input): return boot.invoke()
+
 def mse_loss(input, target, size_average=None, reduce=None, reduction='mean'): return boot.invoke()
 def cross_entropy(input, target, weight=None, size_average=None, ignore_index=-100, reduce=None, reduction='mean', label_smoothing=0.0): return boot.invoke()
 def topk(input, k, dim=None, largest=True, sorted=True): return boot.invoke()

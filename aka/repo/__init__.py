@@ -1,11 +1,7 @@
 from .. import boot
 
-def exists(repo, filename, **kwargs): return boot.invoke()
-def join(repo, filename, **kwargs): return boot.invoke()
-
-def fileopen(repo, filename, **kwargs): return boot.invoke()
-def jsonload(repo, filename, **kwargs): return boot.invoke()
-def safeopen(repo, filename, *, framework, **kwargs): return boot.invoke()
+def exist(repo, pathname, **kwargs): return boot.invoke()
+def fopen(repo, pathname, ftype, open_kwargs=None, **kwargs): return boot.invoke()
 
 def AutoModel(repo): return boot.invoke()
 def AutoDataset(repo): return boot.invoke()

@@ -3,23 +3,25 @@ os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 
 import aka.numpy
 
-def exists(*args, **kwargs):
+def exist(*args, **kwargs):
     return join(*args, _raise_exceptions_for_missing_entries=False, **kwargs) is not None
 
 def join(*args, _raise_exceptions_for_missing_entries=True, **kwargs):
     import transformers
     return transformers.utils.cached_file(*args, _raise_exceptions_for_missing_entries=_raise_exceptions_for_missing_entries, **kwargs)
 
-def fileopen(repo, filename, **kwargs):
-    return open(join(repo, filename, **kwargs))
+def fopen(repo, pathname, ftype='file', open_kwargs={}, framework=aka.numpy.framework(), **kwargs):
+    match ftype:
+        case 'json':
+            import json
+            return json.load(open(join(repo, pathname, **kwargs), **open_kwargs))
 
-def jsonload(repo, filename, **kwargs):
-    import json
-    return json.load(fileopen(repo, filename, **kwargs))
-
-def safeopen(repo, filename, *, framework=aka.numpy.framework(), **kwargs):
-    import safetensors
-    return safetensors.safe_open(join(repo, filename, **kwargs), framework=framework)
+        case 'safetensor':
+            import safetensors
+            return safetensors.safe_open(join(repo, pathname, **kwargs), framework=framework, **open_kwargs)
+            
+        case 'file':
+            return open(join(repo, pathname, **kwargs), **open_kwargs)
 
 def AutoDataset(*args, **kwargs):
     import datasets

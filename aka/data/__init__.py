@@ -6,6 +6,6 @@ def CIFAR100(*args, **kwargs):return boot.invoke()
 def MNIST(*args, **kwargs):return boot.invoke()
 def FashionMNIST(*args, **kwargs):return boot.invoke()
 def ImageFolder(*args, **kwargs):return boot.invoke()
-def StreamingLoader(dataset, tokenizer, n_tokens, batch_size, data_mapper=None):return boot.invoke()
+def TextStreamingLoader(dataset, tokenizer, n_tokens, batch_size, data_mapper=None):return boot.invoke()
 
 boot.inject()
