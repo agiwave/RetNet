@@ -29,6 +29,6 @@ to folder:
 
 python Retention.py
 
-## Understanding
+## Graphs
 
 ![alt text](Retention.png)
