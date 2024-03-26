@@ -65,7 +65,7 @@ def RetentionBlock(args):
 
         # -- rotary embedding --
         q, k, v = [np.rearrange('b l n d -> b n l d', t) for t in [q, k, v]]
-        q = apply_rotary_emb(q, cache, pos=k.size(2)-T)
+        q = apply_rotary_emb(q, cache)
         k = apply_rotary_emb(k, cache)
 
         # -- qkv ( Q @ K * D ) @ V --
