@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from torchinfo import summary
 
 def load_weights(model, filename):
-    model.load_state_dict(torch.load(filename))
+    model.load_state_dict(torch.load(filename, map_location=torch.device('cpu')))
     return model
     
 def save_weights(model, filename):
@@ -23,8 +23,10 @@ def train(
         data_loader = None,
         collate_fn=None,
         persist_filename = None, 
+        persist_per_batchs = None,
         shuffle = True,
-        batch_size = 1,
+        batch_size = 8,
+        show_frequency = 0.2,
         epochs = 1,
         show_chart = False, **kwargs):
 
@@ -74,11 +76,11 @@ def train(
                 # -- Persist --
                 if(persist_filename!=None):
                     save_weights(model, persist_filename)
-                print('')
+                # print('')
             
             # -- Print batch result if passed time over 0.2s --
             curr_time = time.time()
-            if(curr_time-last_print_time > 0.2):
+            if(curr_time-last_print_time > show_frequency):
                 batch_time = ctx.batch_time
                 progress = (ctx.i_batchs+1)*100.0/ctx.n_batchs
                 print('\033[A\033[2K'+'|'.join(format(str(item), f'^{12}') for item in [
@@ -91,6 +93,9 @@ def train(
                 last_print_time = curr_time
 
             n_batchs += 1
+            if persist_filename is not None and persist_per_batchs is not None:
+                if (n_batchs % persist_per_batchs) == 0:
+                    save_weights(model, persist_filename)
             n_batch_print = ctx.n_batchs*epochs//100
             if n_batch_print == 0:
                 n_batch_print = 1
@@ -138,10 +143,22 @@ def Trainer(
     optimizer="Adam",
     optimizer_kwargs={},
     loss_metric = None,
+    data_parallel = False,
     forward_kwargs={},
     epochs=2,
+    dtype=None,
     **kwargs):
-    
+
+    if torch.cuda.is_available():
+        device = torch.device("cuda:0")
+        model = model.to(device)
+        if data_parallel is True:
+            model = torch.nn.DataParallel(model)
+    else:
+        device = torch.device("cpu")
+    if dtype is not None:
+        model = model.to(dtype)
+
     # -- Train Variables --
     train_mode = 0  # 0 -- Uninitialized, 2 -- With loss --, 3 -- Dict loss --
     ctx = TrainArgs(
@@ -165,6 +182,13 @@ def Trainer(
                 (inputs, targets) = item
             else:
                 (inputs, targets) = item[data_fields[0]], item[data_fields[1]]
+
+            inputs = inputs.to(device)
+            targets = targets.to(device)
+            if dtype is not None:
+                inputs = inputs.to(dtype)
+                targets = targets.to(dtype)
+
             if loss_metric is None:
                 (outputs, loss) = model(inputs, targets=targets, **forward_kwargs)
             else:
@@ -178,7 +202,7 @@ def Trainer(
                     ctx.train_mode = 3
                     ctx.tran_n_losses = len(loss)
                     ctx.train_losses, a_losses, t_optimizers = [], [], []
-                    for (m, _) in losses:
+                    for (m, _) in loss:
                         if(m is None):
                             m = model
                         optim = getattr(torch.optim,optimizer)(m.parameters(), **optimizer_kwargs)
@@ -205,7 +229,7 @@ def Trainer(
                 for (_, subloss) in loss:
                     optim = t_optimizers[i]
                     optim.zero_grad()
-                    retain_graph = True if i != n_losses-1 else False
+                    retain_graph = True if i != len(loss)-1 else False
                     subloss.backward(retain_graph=retain_graph)
                     ctx.losses.append(subloss.item())
                     i+=1
