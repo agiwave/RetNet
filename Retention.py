@@ -28,15 +28,15 @@ def RetentionBlock(**kwargs):
         return self
 
     def apply_rotary_emb(x, cache, pos=0):
-        _,_,L,D = x.shape
+        _,L,_,D = x.shape
         slen = pos+L
         emb = cache.get('rotary_emb', None)
         if emb is None or len(emb[0]) < slen:
             angle = 1.0 / (10000 ** np.linspace(0, 1, D//2, dtype=x.dtype, device=x.device))
             angle = angle.unsqueeze(-1).repeat(1, 2).flatten()
             index = np.arange(slen, dtype=x.dtype, device=x.device)
-            sin = np.sin(index[:, None] * angle[None, :])
-            cos = np.cos(index[:, None] * angle[None, :])
+            sin = np.sin(index[:, None, None] * angle[None, None, :])
+            cos = np.cos(index[:, None, None] * angle[None, None, :])
             cache['rotary_emb'] = (sin, cos)
         else:
             (sin,cos) = emb
@@ -57,7 +57,6 @@ def RetentionBlock(**kwargs):
         B *= self.scaling
 
         # -- rotary embedding --
-        C, B = [np.rearrange('b l n d -> b n l d', t) for t in [C, B]]
         C = apply_rotary_emb(C, cache)
         B = apply_rotary_emb(B, cache)
 
@@ -65,12 +64,13 @@ def RetentionBlock(**kwargs):
             ssm_state = None if state is None else state.get('ssm_state',None)
             ssm_state = ssm_state if ssm_state is not None else np.zeros(b, 1, self.num_heads, self.value_dim//self.num_heads, self.embed_dim//self.num_heads, dtype=x.dtype, device=x.device)
             A = np.exp(self.decay.view(1,1,self.num_heads,1,1))
-            B = np.rearrange('b h l (d n)->b l h d n', B, d=1)
-            C = np.rearrange('b h l (d n)->b l h d n', C, d=1)
+            B = B.unsqueeze(-2)
+            C = C.unsqueeze(-2)
             x, ssm_state = causalScan(x, ssm_state, A, B, C)
             if state is not None:
                 state['ssm_state'] = ssm_state.detach()
         else:
+            C, B = [np.rearrange('b l h d -> b h l d', t) for t in [C, B]]
             x = np.rearrange('b l n d -> b n l d', x)
 
             # Pure py implementation. Pool performance and Memory efficiency.
@@ -114,6 +114,30 @@ def RetentionBlock(**kwargs):
         else:
             return x
     return __init__(nn.Module(forward=forward), **kwargs)
+
+def RetentionArgs(name):
+    args = nn.Object(
+        vocab_dim = 32,
+        latent_dim = 384,
+        dropout = 0.1,
+        bias = False, # bias in Linear?
+    )
+    mlp_args = nn.Object(
+        name = 'Xproj',
+        hidden_dim = 384 * 3
+    ),
+    attn_args = nn.Object(
+        name = 'Retention',
+        num_heads = 8,
+        num_kv_groups = 8,
+        rotary_embedding = True
+    ),
+    match name:
+        case 'Ret':
+            args.layers = [attn_args, mlp_args]*3
+        case _:
+            assert False, f"Unknown Ret name{name}"
+    return args
 
 def RetNet(name):
     import aka.repo as repo
